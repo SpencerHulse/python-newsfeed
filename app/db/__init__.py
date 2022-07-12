@@ -20,8 +20,10 @@ Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
 
-def init_db():
+def init_db(app):
     Base.metadata.create_all(engine)
+    # Runs whenever a context is destroyed
+    app.teardown_appcontext(close_db)
 
 
 def get_db():
@@ -31,3 +33,11 @@ def get_db():
         g.db = Session()
 
     return g.db
+
+
+def close_db(e=None):
+    # pop attempts to remove the db from the g object
+    db = g.pop("db", None)
+
+    if db is not None:
+        db.close()
