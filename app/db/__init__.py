@@ -3,6 +3,7 @@
 # we need to first call load_dotenv() from the python-dotenv module.
 # In production, DB_URL will be a proper environment variable.
 from os import getenv
+from flask import g
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -17,3 +18,16 @@ engine = create_engine(getenv("DB_URL"), echo=True, pool_size=20, max_overflow=0
 Session = sessionmaker(bind=engine)
 # Maps the models to real MySQL tables
 Base = declarative_base()
+
+
+def init_db():
+    Base.metadata.create_all(engine)
+
+
+def get_db():
+    # Checks whether a db Session is already running
+    if "db" not in g:
+        # store db connection in app context
+        g.db = Session()
+
+    return g.db
