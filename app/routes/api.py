@@ -10,13 +10,18 @@ def signup():
     data = request.get_json()
     db = get_db()
 
-    # Create new user
-    newUser = User(
-        username=data["username"], email=data["email"], password=data["password"]
-    )
+    try:
+        # Attempt to create a new user
+        newUser = User(
+            username=data["username"], email=data["email"], password=data["password"]
+        )
 
-    # Save in the database
-    db.add(newUser)
-    db.commit()
+        # Save in the database
+        db.add(newUser)
+        db.commit()
+    except:
+        # Insert failed, so rollback the database (remove pending state) and send an error to front end
+        db.rollback()
+        return jsonify(message="Signup failed"), 500
 
     return jsonify(id=newUser.id)
