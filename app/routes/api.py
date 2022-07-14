@@ -82,6 +82,60 @@ def comment():
     return jsonify(id=newComment.id)
 
 
+@bp.route("/posts", methods=["POST"])
+def create():
+    data = request.get_json()
+    db = get_db()
+
+    try:
+        # Make a new post
+        newPost = Post(
+            title=data["title"],
+            post_url=data["post_url"],
+            user_id=session.get("user_id"),
+        )
+
+        db.add(newPost)
+        db.commit()
+    except:
+        db.rollback()
+        return jsonify(message="Post failed"), 500
+
+    return jsonify(id=newPost.id)
+
+
+@bp.route("/posts/<id>", methods=["PUT"])
+def update(id):
+    data = request.get_json()
+    db = get_db()
+
+    try:
+        # Retrieve post and update the title property
+        post = db.query(Post).filter(Post.id == id).one()
+        post.title = data["title"]
+        db.commit()
+    except:
+        db.rollback()
+        return jsonify(message="Post not found"), 404
+
+    return "", 204
+
+
+@bp.route("/posts/<id>", methods=["DELETE"])
+def delete(id):
+    db = get_db()
+
+    try:
+        # Delete post from db
+        db.delete(db.query(Post).filter(Post.id == id).one())
+        db.commit()
+    except:
+        db.rollback()
+        return jsonify(message="Post not found"), 404
+
+    return "", 204
+
+
 @bp.route("/posts/upvote", methods=["PUT"])
 def upvote():
     data = request.get_json()
